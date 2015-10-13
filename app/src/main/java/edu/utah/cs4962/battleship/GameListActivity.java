@@ -32,7 +32,8 @@ public class GameListActivity extends AppCompatActivity implements ListAdapter
     {
         super.onCreate(savedInstanceState);
 
-        //ArrayAdapter<String> Games = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, drawingNames);
+        String[] drawingNames = {"Game1","Game2","Game3"};
+        ArrayAdapter<String> Games = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, drawingNames);
 
         ListView gameListView = new ListView(this);
         gameListView.setAdapter(this);
@@ -50,7 +51,7 @@ public class GameListActivity extends AppCompatActivity implements ListAdapter
             }
         });
 
-        setContentView(R.layout.activity_main);
+        setContentView(gameListView);
     }
 
     //Implemented for Adapter

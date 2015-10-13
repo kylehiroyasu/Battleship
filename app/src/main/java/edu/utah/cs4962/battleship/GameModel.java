@@ -46,6 +46,9 @@ public class GameModel
 
     //This empty method works to prevent multiple instances of GameModel
     protected GameModel(){
+        _games = new ArrayList<>();//TODO:Not sure if this is a good idea or if I'm confused on game model
+        _games.add(new Game());
+        _games.add(new Game());
     }
 
     public static GameModel getInstance(){

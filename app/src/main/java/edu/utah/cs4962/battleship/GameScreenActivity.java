@@ -1,11 +1,13 @@
 package edu.utah.cs4962.battleship;
 
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
@@ -45,25 +47,44 @@ public class GameScreenActivity extends AppCompatActivity
         LinearLayout rootLayout = new LinearLayout(this);
         rootLayout.setOrientation(LinearLayout.VERTICAL);
 
+        //Instantiating layout params for each players grid
+        LinearLayout.LayoutParams playerLayout;
+
         //Layout for Grids
         LinearLayout gameGridsLayout = new LinearLayout(this);
-        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+        LinearLayout.LayoutParams gameGridsLayoutParams;
+        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
             gameGridsLayout.setOrientation(LinearLayout.VERTICAL);
-        else
+            gameGridsLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1);
+        }else {
+            //TODO: Horizontal display isn't working
             gameGridsLayout.setOrientation(LinearLayout.HORIZONTAL);
+            gameGridsLayoutParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1);
+        }
         //Adding this players GameGridView to layout
         View playersGameGrid = new View(this);
+        playersGameGrid.setBackgroundColor(Color.BLUE);
 
         //Adding the opponents GameGridView to layout
         View opponentsGameGrid = new View(this);
+        opponentsGameGrid.setBackgroundColor(Color.RED);
+
+
+        //Adding players grids
+        gameGridsLayout.addView(playersGameGrid, gameGridsLayoutParams);
+        gameGridsLayout.addView(opponentsGameGrid, gameGridsLayoutParams);
 
         //Attack button
         Button attackButton = new Button(this);
-        attackButton.setPadding(padding,padding,padding,padding);
+        attackButton.setPadding(padding, padding, padding, padding);
         attackButton.setWidth((int) (76 * dp));
         attackButton.setHeight((int) (36 * dp));
         attackButton.setText("Attack");
+        LinearLayout.LayoutParams buttonLayout = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,(int) (36 * dp), 0);
 
+        //Adding views to rootLayout
+        rootLayout.addView(gameGridsLayout, gameGridsLayoutParams);
+        rootLayout.addView(attackButton,buttonLayout);
         setContentView(rootLayout);
 
     }
