@@ -75,6 +75,11 @@ public class Game{
         }
     }
 
+    public boolean playerOneLost(){return _playerOne.allBoatsDestroyed();}
+    public boolean playerTwoLost(){return _playerTwo.allBoatsDestroyed();}
+    public int playerOneAttacked(){return  _playerOne.hasBeenAttacked();}
+    public int playerTwoAttacked(){return _playerTwo.hasBeenAttacked();};
+
     public boolean playerOnesTurn(){
         if(_playerOne.hasBeenAttacked() == 0 && _playerTwo.hasBeenAttacked() == 0){
             //If this loop is entered it is the first more and playerOne gets to start
@@ -113,6 +118,39 @@ _boats: List of points where boats are located
             _boats = new ArrayList<>();
             generateBoatLocations();
         }
+
+        public List<GridPoint> getMisses()
+        {
+            return _misses;
+        }
+
+        public Object getMissesArray()
+        {
+            return _misses.toArray();
+        }
+
+
+        public List<GridPoint> getHits()
+        {
+            return _hits;
+        }
+
+        public Object getHitsArray()
+        {
+            return _hits.toArray();
+        }
+
+        public List<GridPoint> getBoats()
+        {
+            return _boats;
+        }
+
+        public Object getBoatsArray()
+        {
+            return _boats.toArray();
+        }
+
+
 
         private void generateBoatLocations(){
             int[] boatSizes = {5,4,3,3,2};
@@ -211,6 +249,7 @@ _boats: List of points where boats are located
                 return true;
             return false;
         }
+
     }
 
 }

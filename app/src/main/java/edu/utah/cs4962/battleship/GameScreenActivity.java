@@ -31,10 +31,12 @@ If the game has already ended, no further missiles may be launched
  and the screen should somehow indicate the winner
 
  TODO:Figure out how I want to control view of boats on turn by turn basis
+ TODO:Figure out how to bubble up events to deal with touch on attack
  */
 public class GameScreenActivity extends AppCompatActivity
 {
-
+    static public String GAME_INDEX_EXTRA = "game_index";
+    Game _game;
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -53,14 +55,18 @@ public class GameScreenActivity extends AppCompatActivity
         //Layout for Grids
         LinearLayout gameGridsLayout = new LinearLayout(this);
         LinearLayout.LayoutParams gameGridsLayoutParams;
+        gameGridsLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1);
+        LinearLayout.LayoutParams eachGridLayoutParams;
         if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
             gameGridsLayout.setOrientation(LinearLayout.VERTICAL);
-            gameGridsLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1);
+            eachGridLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1);
         }else {
             //TODO: Horizontal display isn't working
             gameGridsLayout.setOrientation(LinearLayout.HORIZONTAL);
-            gameGridsLayoutParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1);
+            gameGridsLayout.setBackgroundColor(Color.CYAN);
+            eachGridLayoutParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1);
         }
+
         //Adding this players GameGridView to layout
         View playersGameGrid = new View(this);
         playersGameGrid.setBackgroundColor(Color.BLUE);
@@ -71,8 +77,8 @@ public class GameScreenActivity extends AppCompatActivity
 
 
         //Adding players grids
-        gameGridsLayout.addView(playersGameGrid, gameGridsLayoutParams);
-        gameGridsLayout.addView(opponentsGameGrid, gameGridsLayoutParams);
+        gameGridsLayout.addView(playersGameGrid, eachGridLayoutParams);
+        gameGridsLayout.addView(opponentsGameGrid, eachGridLayoutParams);
 
         //Attack button
         Button attackButton = new Button(this);
@@ -89,4 +95,15 @@ public class GameScreenActivity extends AppCompatActivity
 
     }
 
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+    }
 }

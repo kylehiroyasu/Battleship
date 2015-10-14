@@ -32,9 +32,6 @@ public class GameListActivity extends AppCompatActivity implements ListAdapter
     {
         super.onCreate(savedInstanceState);
 
-        String[] drawingNames = {"Game1","Game2","Game3"};
-        ArrayAdapter<String> Games = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, drawingNames);
-
         ListView gameListView = new ListView(this);
         gameListView.setAdapter(this);
         setContentView(gameListView);
@@ -46,7 +43,7 @@ public class GameListActivity extends AppCompatActivity implements ListAdapter
             {
                 Intent openGameActivityIntent = new Intent();
                 openGameActivityIntent.setClass(GameListActivity.this, GameScreenActivity.class);
-                //openGameActivityIntent.putExtra(GameScreenActivity.GAME_INDEX_EXTRA, (int) id);
+                openGameActivityIntent.putExtra(GameScreenActivity.GAME_INDEX_EXTRA, (int) id);
                 GameListActivity.this.startActivity(openGameActivityIntent);
             }
         });
@@ -92,13 +89,41 @@ public class GameListActivity extends AppCompatActivity implements ListAdapter
         Game game = (Game)getItem(position);
 
         LinearLayout rowLayout = new LinearLayout(this);
-        rowLayout.setOrientation(LinearLayout.HORIZONTAL);
-
+        rowLayout.setOrientation(LinearLayout.VERTICAL);
+        //Game number
         TextView drawingTitle = new TextView(this);
-        int padding = (int)(10* getResources().getDisplayMetrics().density);
+        int padding = (int)(5* getResources().getDisplayMetrics().density);
         drawingTitle.setPadding(padding,padding,padding,padding);
-        drawingTitle.setText(game.toString());
+        drawingTitle.setText("Game " + position);
+
+        //if in progress
+        TextView gameProgress = new TextView(this);
+        gameProgress.setPadding(padding,padding,padding,padding);
+        String progress = (game.gameOver()) ? "Game Over" : "In Progress";
+        gameProgress.setText("Game State: "+progress);
+
+        //Whose turn it is
+        TextView whoseTurn = new TextView(this);
+        whoseTurn.setPadding(padding,padding,padding,padding);
+        String turn;
+        if(game.gameOver()){
+            turn = "Winner: ";
+            turn += (game.playerOneLost()) ? "Player 2" : "Player 1";
+        }else{
+            turn = (game.playerOnesTurn()) ? "Player 1" : "Player 2";
+            turn +="'s Turn";
+        }
+        whoseTurn.setText(turn);
+
+        //How many missiles each player has launched
+        TextView missilesLaunched = new TextView(this);
+        missilesLaunched.setPadding(padding,padding,padding,padding);
+        missilesLaunched.setText("Missiles Fired: [Player 1 - " + game.playerTwoAttacked() + "] [Player 2 - " + game.playerOneAttacked() + "]");
+
         rowLayout.addView(drawingTitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT, 0));
+        rowLayout.addView(gameProgress, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT, 0));
+        rowLayout.addView(whoseTurn, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT, 0));
+        rowLayout.addView(missilesLaunched, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT, 0));
 
         return rowLayout;
     }
