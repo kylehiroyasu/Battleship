@@ -60,7 +60,7 @@ public class GameModel
 
     public void loadGame(String path){
         try{
-            File gameFile = new File(path, "games.txt");
+            File gameFile = new File(path);
             FileReader fileReader = new FileReader(gameFile);
             BufferedReader reader = new BufferedReader(fileReader);
             String gamesJson = reader.readLine();
@@ -77,8 +77,7 @@ public class GameModel
         Gson gson = new Gson();
         String jsonGame = gson.toJson(_games);
         try{
-            File gameFile = new File(path);
-            FileWriter fileWriter = new FileWriter(gameFile, false);
+            FileWriter fileWriter = new FileWriter(path, false);
             BufferedWriter writer = new BufferedWriter(fileWriter);
             writer.write(jsonGame);
             writer.close();

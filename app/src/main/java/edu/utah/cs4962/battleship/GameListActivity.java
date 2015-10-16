@@ -15,6 +15,8 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.io.File;
+
 /*
 A screen containing a list view that allows listing of games in-progress
 or ended that opens the game when an item is tapped.
@@ -27,6 +29,8 @@ The item should note:
  */
 public class GameListActivity extends AppCompatActivity implements ListAdapter
 {
+    GameModel _gameModel;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -49,6 +53,15 @@ public class GameListActivity extends AppCompatActivity implements ListAdapter
         });
 
         setContentView(gameListView);
+    }
+
+    @Override
+    protected void onResume()
+    {
+
+        super.onResume();
+        _gameModel = GameModel.getInstance();
+        _gameModel.loadGame(new File(getFilesDir(), "game.txt").getPath());;
     }
 
     //Implemented for Adapter

@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 
 import java.util.Iterator;
 
@@ -15,6 +14,22 @@ import java.util.Iterator;
  */
 public class GameGridView extends View
 {
+    public interface SetAttackCoordListener
+    {
+        void SetAttackCoord(int x, int y);
+    }
+    SetAttackCoordListener _setAttackCoordListener = null;
+
+    public SetAttackCoordListener getSetAttackCoordListener()
+    {
+        return _setAttackCoordListener;
+    }
+
+    public void setSetAttackCoordListener(SetAttackCoordListener setAttackCoordListener)
+    {
+        _setAttackCoordListener = setAttackCoordListener;
+    }
+
     Game.GameGrid _grid;
     boolean _showBoats;
 
@@ -30,14 +45,19 @@ public class GameGridView extends View
         super.onDraw(canvas);
         //If game does is nonnull we should draw the game grid
         if(_grid != null){
-            float size = Math.max(getWidth(), getHeight())/10;
-
+            float size = Math.min(getWidth(), getHeight())/10;
+            Paint cellPaint = new Paint();
 
             for(int row = 0; row < 10; row++){
                 for(int col = 0; col < 10; col++){
-
-                    Paint cellPaint = new Paint();
+                    //Filling inside
+                    cellPaint.setStyle(Paint.Style.FILL);
                     cellPaint.setColor(Color.BLUE);
+                    canvas.drawRect(col*size, row*size, (col+1)*size, (row+1)*size, cellPaint);
+                    //Drawing the border
+                    cellPaint.setStyle(Paint.Style.STROKE);
+                    cellPaint.setStrokeWidth(size / 10);
+                    cellPaint.setColor(Color.BLACK);
                     canvas.drawRect(col*size, row*size, (col+1)*size, (row+1)*size, cellPaint);
                 }
 
@@ -46,8 +66,14 @@ public class GameGridView extends View
                 Iterator boatLocations = _grid.getBoats().iterator();
                 while (boatLocations.hasNext()) {
                     Game.GridPoint point = (Game.GridPoint) boatLocations.next();
-                    Paint cellPaint = new Paint();
+                    //Fill
+                    cellPaint.setStyle(Paint.Style.FILL);
                     cellPaint.setColor(Color.GRAY);
+                    canvas.drawRect(point.x * size, point.y * size, (point.x + 1) * size, (point.y + 1) * size, cellPaint);
+                    //Stroke
+                    cellPaint.setStyle(Paint.Style.STROKE);
+                    cellPaint.setStrokeWidth(size/10);
+                    cellPaint.setColor(Color.BLACK);
                     canvas.drawRect(point.x * size, point.y * size, (point.x + 1) * size, (point.y + 1) * size, cellPaint);
                 }
             }
@@ -55,16 +81,27 @@ public class GameGridView extends View
             Iterator missesLocations = _grid.getMisses().iterator();
             while(missesLocations.hasNext()){
                 Game.GridPoint point = (Game.GridPoint)missesLocations.next();
-                Paint cellPaint = new Paint();
+
+                cellPaint.setStyle(Paint.Style.FILL);
                 cellPaint.setColor(Color.WHITE);
+                canvas.drawRect(point.x * size, point.y * size, (point.x + 1) * size, (point.y + 1) * size, cellPaint);
+
+                cellPaint.setStyle(Paint.Style.STROKE);
+                cellPaint.setStrokeWidth(size/10);
+                cellPaint.setColor(Color.BLACK);
                 canvas.drawRect(point.x*size, point.y*size, (point.x+1)*size, (point.y+1)*size, cellPaint);
             }
 
-            Iterator hitLocations = _grid.getBoats().iterator();
+            Iterator hitLocations = _grid.getHits().iterator();
             while(hitLocations.hasNext()){
                 Game.GridPoint point = (Game.GridPoint)hitLocations.next();
-                Paint cellPaint = new Paint();
+
+                cellPaint.setStyle(Paint.Style.FILL);
                 cellPaint.setColor(Color.RED);
+                canvas.drawRect(point.x*size, point.y*size, (point.x+1)*size, (point.y+1)*size, cellPaint);
+
+                cellPaint.setStyle(Paint.Style.STROKE);
+                cellPaint.setColor(Color.BLACK);
                 canvas.drawRect(point.x*size, point.y*size, (point.x+1)*size, (point.y+1)*size, cellPaint);
             }
 
@@ -74,5 +111,28 @@ public class GameGridView extends View
     public void loadGameGrid(Game.GameGrid grid, boolean showBoats){
         _grid = grid;
         _showBoats = showBoats;
+        invalidate();
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event)
+    {
+        //Only acknowledge the touch up event
+        if(event.getActionMasked()== MotionEvent.ACTION_UP) {
+            //ontouchup event
+            //get x and y
+            float x = event.getX();
+            float y = event.getY();
+            float size = Math.min(getWidth(), getHeight())/10;
+            //find the grid point they touched
+            int xCoord = (int) Math.floor(x/size);
+            int yCoord = (int) Math.floor(y/size);
+            //Add to model
+            //TODO: How should i implement this step? :O
+            _setAttackCoordListener.SetAttackCoord(xCoord, yCoord);
+            //invalidate
+            invalidate();
+        }
+        return true;
     }
 }
