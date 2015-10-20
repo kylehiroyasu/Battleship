@@ -38,8 +38,9 @@ public class GameScreenActivity extends AppCompatActivity implements GameGridVie
 {
     static public String GAME_INDEX_EXTRA = "game_index";
     GameModel _gameModel = new GameModel();
-    int _xCoord;
-    int _yCoord;
+    Game _currentGame;
+    Integer _xCoord = null;
+    Integer _yCoord = null;
     TextView _xText;
     TextView _yText;
 
@@ -49,7 +50,6 @@ public class GameScreenActivity extends AppCompatActivity implements GameGridVie
     {
         super.onCreate(savedInstanceState);
 
-        //TODO: Make sure this is okay
         _gameModel = GameModel.getInstance();
         _gameModel.loadGame(new File(getFilesDir(), "game.txt").getPath());
 
@@ -58,14 +58,14 @@ public class GameScreenActivity extends AppCompatActivity implements GameGridVie
         int padding = (int)(10*dp);
 
         //Master layout for game screen
-        LinearLayout rootLayout = new LinearLayout(this);
+        final LinearLayout rootLayout = new LinearLayout(this);
         rootLayout.setOrientation(LinearLayout.VERTICAL);
 
         //Instantiating layout params for each players grid
         LinearLayout.LayoutParams playerLayout;
 
         //Layout for Grids
-        LinearLayout gameGridsLayout = new LinearLayout(this);
+        final LinearLayout gameGridsLayout = new LinearLayout(this);
         LinearLayout.LayoutParams gameGridsLayoutParams;
         gameGridsLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1);
         LinearLayout.LayoutParams eachGridLayoutParams;
@@ -86,13 +86,25 @@ public class GameScreenActivity extends AppCompatActivity implements GameGridVie
         final GameGridView playersGameGrid = new GameGridView(this);
         playersGameGrid.loadGameGrid(currentGame.getPlayerOne(), true);
         playersGameGrid.setBackgroundColor(Color.BLUE);
-        playersGameGrid.setSetAttackCoordListener(this);//TODO: THis needs to be controlled, so both aren't listening at the same time
-
+        if(currentGame.playerOnesTurn()) {
+            playersGameGrid.setShowBoats(true);
+            playersGameGrid.setSetAttackCoordListener(null);
+        }else{
+            playersGameGrid.setShowBoats(false);
+            playersGameGrid.setSetAttackCoordListener(this);
+        }
         //Adding the opponents GameGridView to layout
         final GameGridView opponentsGameGrid = new GameGridView(this);
-        opponentsGameGrid.loadGameGrid(currentGame.getPlayerTwo(), true); //TODO: Switch these values to alternate which is true and false
+        opponentsGameGrid.loadGameGrid(currentGame.getPlayerTwo(), true);
         opponentsGameGrid.setBackgroundColor(Color.RED);
-        opponentsGameGrid.setSetAttackCoordListener(this);//TODO: THis needs to be controlled, so both aren't listening at the same time
+        if(currentGame.playerOnesTurn()){
+            opponentsGameGrid.setShowBoats(false);
+            opponentsGameGrid.setSetAttackCoordListener(this);
+        }else{
+            opponentsGameGrid.setShowBoats(true);
+            opponentsGameGrid.setSetAttackCoordListener(null);
+        }
+
 
         //Adding players grids
         gameGridsLayout.addView(playersGameGrid, eachGridLayoutParams);
@@ -116,15 +128,22 @@ public class GameScreenActivity extends AppCompatActivity implements GameGridVie
             @Override
             public void onClick(View v)
             {
-                if(_xText.getText() != null && _yText.getText() != null){
+                if(_xCoord != null && _yCoord != null){
                     //Getting intent game index
                     int gameIndex = getIntent().getIntExtra(GAME_INDEX_EXTRA, -1);
                     //making sure we had a valid game index
                     if(gameIndex >= 0) {
                         //Adding the turn to the selected game
-                        _gameModel.getGame(gameIndex).addTurn(_xCoord, _yCoord);
-                        opponentsGameGrid.invalidate(); //TODO: figure out why these gamegrids are not being redrawn
-                        playersGameGrid.invalidate();
+                        _gameModel.updateGame(_xCoord, _yCoord, gameIndex);
+
+                        opponentsGameGrid.loadGameGrid(_gameModel.getGame(gameIndex).getPlayerTwo(), true);
+                        playersGameGrid.loadGameGrid(_gameModel.getGame(gameIndex).getPlayerOne(), true);
+                        //Changing the ShowBoats boolean and click listener
+                        switchClickListeners(playersGameGrid, opponentsGameGrid, gameIndex);
+                        _xText.setText(null);
+                        _yText.setText(null);
+                        _xCoord = null;
+                        _yCoord = null;
                     }
                 }
 
@@ -143,6 +162,9 @@ public class GameScreenActivity extends AppCompatActivity implements GameGridVie
         _yText.setWidth((int) (36 * dp));
         _yText.setHint("Y Coord");
 
+        _yText.setText(null);
+        _xText.setText(null);
+
         attackLayout.addView(attackButton, buttonLayout);
         attackLayout.addView(_xText, xLayout);
         attackLayout.addView(_yText, xLayout);
@@ -152,6 +174,22 @@ public class GameScreenActivity extends AppCompatActivity implements GameGridVie
         rootLayout.addView(attackLayout);
         setContentView(rootLayout);
 
+    }
+
+    public void switchClickListeners(GameGridView playersGameGrid, GameGridView opponentsGameGrid, int gameIndex){
+        if(_gameModel.getGame(gameIndex).playerOnesTurn()){
+            playersGameGrid.setShowBoats(true);
+            opponentsGameGrid.setShowBoats(false);
+
+            opponentsGameGrid.setSetAttackCoordListener(this);
+            playersGameGrid.setSetAttackCoordListener(null);
+        }else{
+            playersGameGrid.setShowBoats(false);
+            opponentsGameGrid.setShowBoats(true);
+
+            playersGameGrid.setSetAttackCoordListener(this);
+            opponentsGameGrid.setSetAttackCoordListener(null);
+        }
     }
 
     @Override

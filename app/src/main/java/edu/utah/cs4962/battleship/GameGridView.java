@@ -33,6 +33,17 @@ public class GameGridView extends View
     Game.GameGrid _grid;
     boolean _showBoats;
 
+    public boolean isShowBoats()
+    {
+        return _showBoats;
+    }
+
+    public void setShowBoats(boolean showBoats)
+    {
+        _showBoats = showBoats;
+        invalidate();
+    }
+
     public GameGridView(Context context)
     {
         super(context);
@@ -117,8 +128,8 @@ public class GameGridView extends View
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
-        //Only acknowledge the touch up event
-        if(event.getActionMasked()== MotionEvent.ACTION_UP) {
+        //Only acknowledge the touch up event if boats are hidden =
+        if(event.getActionMasked()== MotionEvent.ACTION_UP && !_showBoats) {
             //ontouchup event
             //get x and y
             float x = event.getX();
@@ -130,8 +141,6 @@ public class GameGridView extends View
             //Add to model
             //TODO: How should i implement this step? :O
             _setAttackCoordListener.SetAttackCoord(xCoord, yCoord);
-            //invalidate
-            invalidate();
         }
         return true;
     }

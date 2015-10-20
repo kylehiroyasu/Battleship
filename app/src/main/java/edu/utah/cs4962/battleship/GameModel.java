@@ -46,7 +46,7 @@ public class GameModel
 
     //This empty method works to prevent multiple instances of GameModel
     protected GameModel(){
-        _games = new ArrayList<>();//TODO:Not sure if this is a good idea or if I'm confused on game model
+        _games = new ArrayList<>();
         _games.add(new Game());
         _games.add(new Game());
     }
@@ -120,6 +120,12 @@ public class GameModel
         if(index < _games.size())
             return _games.get(index);
         return null;
+    }
+
+    public void updateGame(int x, int y, int index){
+        Game tempGame = _games.get(index);
+        tempGame.addTurn(x,y);
+        _games.set(index, tempGame);
     }
 
 

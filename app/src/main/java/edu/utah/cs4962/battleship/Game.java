@@ -1,5 +1,7 @@
 package edu.utah.cs4962.battleship;
 
+import android.graphics.Point;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -154,7 +156,7 @@ _boats: List of points where boats are located
         //TODO: Need to make sure boats don't share the same location!!!!
         private void generateBoatLocations(){
             int[] boatSizes = {5,4,3,3,2};
-            List<GridPoint> tempBoatLocations = new ArrayList<>();
+            List<Point> tempBoatLocations = new ArrayList<>();
             Random random = new Random();
             boolean allBoatsPlaced = false;
             int boatNumber = 0;
@@ -165,42 +167,76 @@ _boats: List of points where boats are located
                 int currentY = random.nextInt(10);
                 int orientation = random.nextInt(2);
                 if(orientation == 0 && currentX + currentBoat < 10){
+                    boatNumber++;
+
                     //Set the position of the boat to this span of coordinates
                     for(int tempX = currentX; tempX <= currentX + currentBoat; tempX++){
                         //Save coordinates to tempBoarLocation
-                        tempBoatLocations.add(new GridPoint(tempX,currentY));
+                        Point tempPoint = new Point(tempX,currentY);
+                        if(!tempBoatLocations.contains(tempPoint))
+                            tempBoatLocations.add(tempPoint);
+                        else{
+                            boatNumber = 0;
+                            tempBoatLocations.clear();
+                        }
+
                     }
-                    //increment boatNumber
-                    boatNumber++;
                 }else if(orientation == 0 && currentX - currentBoat >= 0){
+                    boatNumber++;
+
                     //Set the position of the boat to this span of coordinates
                     for(int tempX = currentX - currentBoat; tempX <= currentX; tempX++){
                         //Save coordinates to tempBoarLocation
-                        tempBoatLocations.add(new GridPoint(tempX,currentY));
+                        Point tempPoint = new Point(tempX,currentY);
+                        if(!tempBoatLocations.contains(tempPoint))
+                            tempBoatLocations.add(tempPoint);
+                        else{
+                            boatNumber = 0;
+                            tempBoatLocations.clear();
+                        }
                     }
-                    //increment boatNumber
-                    boatNumber++;
                 }else if(orientation == 1 && currentY + currentBoat < 10){
+                    boatNumber++;
+
                     //Set the position of the boat to this span of coordinates
                     for(int tempY = currentY; tempY <= currentY + currentBoat; tempY++){
                         //Save coordinates to tempBoarLocation
-                        tempBoatLocations.add(new GridPoint(currentX,tempY));
+                        Point tempPoint = new Point(currentX,tempY);
+                        if(!tempBoatLocations.contains(tempPoint))
+                            tempBoatLocations.add(tempPoint);
+                        else{
+                            boatNumber = 0;
+                            tempBoatLocations.clear();
+                        }
                     }
-                    //increment boatNumber
-                    boatNumber++;
                 }else if(orientation == 1 && currentY - currentBoat >= 0){
+                    boatNumber++;
+
                     //Set the position of the boat to this span of coordinates
                     for(int tempY = currentY - currentBoat; tempY <= currentY; tempY++){
-                        //Save coordinates to tempBoarLocation
-                        tempBoatLocations.add(new GridPoint(currentX,tempY));
+                        //Save coordinates to tempBoatLocation
+                        Point tempPoint = new Point(currentX,tempY);
+                        if(!tempBoatLocations.contains(tempPoint))
+                            tempBoatLocations.add(tempPoint);
+                        else{
+                            boatNumber = 0;
+                            tempBoatLocations.clear();
+                        }
+                        //increment boatNumber
                     }
-                    //increment boatNumber
-                    boatNumber++;
+
                 }
                 if(boatNumber == 5)
                     allBoatsPlaced = true;
+
+
             }
-            _boats = tempBoatLocations;
+            //Converting tempBoat locations to GridPoints
+            Iterator boatPointIterator = tempBoatLocations.iterator();
+            while(boatPointIterator.hasNext()){
+                Point temp = (Point) boatPointIterator.next();
+                _boats.add(new GridPoint(temp.x,temp.y));
+            }
         }
 
         /*
@@ -212,9 +248,10 @@ _boats: List of points where boats are located
             Iterator<GridPoint> iterator = _boats.iterator();
             while(iterator.hasNext()){
                 GridPoint boatLocation = iterator.next();
-                if(boatLocation.isEqual(move))
+                if(boatLocation.x == move.x && boatLocation.y == move.y){
                     _hits.add(move);
-                return true;
+                    return true;
+                }
             }
             _misses.add(move);
             return false;

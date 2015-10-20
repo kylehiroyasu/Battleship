@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -27,6 +28,8 @@ The item should note:
  how many missiles have been launched by each player.
  Games can be started from this screen by pressing a “new game” button or other appropriate control
  */
+
+//TODO: Make sure this updates the view when model is modified, everytime resume happens!!!!
 public class GameListActivity extends AppCompatActivity implements ListAdapter
 {
     GameModel _gameModel;
@@ -36,9 +39,8 @@ public class GameListActivity extends AppCompatActivity implements ListAdapter
     {
         super.onCreate(savedInstanceState);
 
-        ListView gameListView = new ListView(this);
+        final ListView gameListView = new ListView(this);
         gameListView.setAdapter(this);
-        setContentView(gameListView);
 
         gameListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
         {
@@ -51,6 +53,24 @@ public class GameListActivity extends AppCompatActivity implements ListAdapter
                 GameListActivity.this.startActivity(openGameActivityIntent);
             }
         });
+        LinearLayout.LayoutParams gameListViewLayout = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1);
+
+        //TODO: Make this into fragment and separate from this view
+        Button newGame = new Button(this);
+        newGame.setText("New Game");
+        newGame.setHeight((int) (36 * getResources().getDisplayMetrics().density));
+        newGame.setWidth(getResources().getDisplayMetrics().widthPixels);
+        newGame.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                _gameModel.createGame();
+                gameListView.invalidate();
+            }
+        });
+        LinearLayout.LayoutParams newGameLayout = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,(int)(36 * getResources().getDisplayMetrics().density), 0);
+
 
         setContentView(gameListView);
     }
@@ -61,7 +81,12 @@ public class GameListActivity extends AppCompatActivity implements ListAdapter
 
         super.onResume();
         _gameModel = GameModel.getInstance();
-        _gameModel.loadGame(new File(getFilesDir(), "game.txt").getPath());;
+        _gameModel.loadGame(new File(getFilesDir(), "game.txt").getPath());
+        for(int index = 0; index < getCount(); index++){
+
+        }
+
+
     }
 
     //Implemented for Adapter
