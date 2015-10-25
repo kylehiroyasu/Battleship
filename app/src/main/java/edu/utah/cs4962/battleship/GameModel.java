@@ -41,8 +41,6 @@ public class GameModel
     //Game model will contain the following data
     //-List of games
     private List<Game> _games;
-    //Game _currentGame = null;
-    Integer _currenGameIndex = null;
 
     //This empty method works to prevent multiple instances of GameModel
     protected GameModel(){
@@ -87,8 +85,10 @@ public class GameModel
         }
     }
     //This method will check if the current game is non null, save if true, and generate a new empty game
-    public void createGame(){
+    // and return the index of the new game
+    public int createGame(){
         _games.add(new Game());
+        return _games.size() - 1;
     }
 
     //This method will get the game at the specified index
@@ -96,17 +96,10 @@ public class GameModel
         return new Game(_games.get(index));
     }
 
-    //TODO: This assumes we always want to update currentGame, is this assumption wrong?
-    public void updateCurrentGame(int x, int y){
-        if(_currenGameIndex != null && _currenGameIndex <_games.size())
-            _games.get(_currenGameIndex).addTurn(x, y);
-    }
 
     //This method will specify the game to be deleted
     //Need to check and make sure we arent deleting current game, otherwise index invalid
     public void deleteGame(int index){
-        if(_currenGameIndex == index)
-            _currenGameIndex = null;
         if(index < _games.size()){
             _games.remove(index);
         }

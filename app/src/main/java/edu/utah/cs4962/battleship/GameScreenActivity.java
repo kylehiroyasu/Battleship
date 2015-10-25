@@ -31,8 +31,6 @@ The screen should not show where the opponent’s ships are.
 If the game has already ended, no further missiles may be launched
  and the screen should somehow indicate the winner
 
- TODO:Figure out how I want to control view of boats on turn by turn basis
- TODO:Figure out how to bubble up events to deal with touch on attack
  */
 public class GameScreenActivity extends AppCompatActivity implements GameGridView.SetAttackCoordListener
 {
@@ -115,7 +113,7 @@ public class GameScreenActivity extends AppCompatActivity implements GameGridVie
         attackLayout.setOrientation(LinearLayout.HORIZONTAL);
 
         //Attack button
-        Button attackButton = new Button(this);
+        final Button attackButton = new Button(this);
         attackButton.setPadding(padding, padding, padding, padding);
         attackButton.setWidth((int) (76 * dp));
         attackButton.setHeight((int) (36 * dp));
@@ -128,23 +126,33 @@ public class GameScreenActivity extends AppCompatActivity implements GameGridVie
             @Override
             public void onClick(View v)
             {
-                if(_xCoord != null && _yCoord != null){
-                    //Getting intent game index
-                    int gameIndex = getIntent().getIntExtra(GAME_INDEX_EXTRA, -1);
-                    //making sure we had a valid game index
-                    if(gameIndex >= 0) {
-                        //Adding the turn to the selected game
-                        _gameModel.updateGame(_xCoord, _yCoord, gameIndex);
+                //Getting intent game index
+                int gameIndex = getIntent().getIntExtra(GAME_INDEX_EXTRA, -1);
 
-                        opponentsGameGrid.loadGameGrid(_gameModel.getGame(gameIndex).getPlayerTwo(), true);
-                        playersGameGrid.loadGameGrid(_gameModel.getGame(gameIndex).getPlayerOne(), true);
-                        //Changing the ShowBoats boolean and click listener
-                        switchClickListeners(playersGameGrid, opponentsGameGrid, gameIndex);
-                        _xText.setText(null);
-                        _yText.setText(null);
-                        _xCoord = null;
-                        _yCoord = null;
+                if(attackButton.getText() == "Attack") {
+                    if (_xCoord != null && _yCoord != null) {
+
+                        //making sure we had a valid game index
+                        if (gameIndex >= 0) {
+                            //Adding the turn to the selected game
+                            _gameModel.updateGame(_xCoord, _yCoord, gameIndex);
+
+                            opponentsGameGrid.loadGameGrid(_gameModel.getGame(gameIndex).getPlayerTwo(), false);
+                            playersGameGrid.loadGameGrid(_gameModel.getGame(gameIndex).getPlayerOne(), false);
+                            //Changing the ShowBoats boolean and click listener
+
+                            _xText.setText(null);
+                            _yText.setText(null);
+                            _xCoord = null;
+                            _yCoord = null;
+                        }
                     }
+                    attackButton.setText("Next Turn");
+
+                }
+                else {
+                    attackButton.setText("Attack");
+                    switchClickListeners(playersGameGrid, opponentsGameGrid, gameIndex);
                 }
 
             }

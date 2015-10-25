@@ -59,7 +59,7 @@ public class GameScreenFragment extends Fragment implements GameGridView.SetAtta
 
     }
 
-    //private OnGameInteractionListener _onGameInteractionListener;
+    private OnGameInteractionListener _onGameInteractionListener;
 
     /**
      * Use this factory method to create a new instance of
@@ -68,7 +68,6 @@ public class GameScreenFragment extends Fragment implements GameGridView.SetAtta
      * @param gameResource Parameter 1.
      * @return A new instance of fragment GameScreenFragment.
      */
-    // TODO: Rename and change types and number of parameters
     public static GameScreenFragment newInstance(int gameResource)
     {
         GameScreenFragment fragment = new GameScreenFragment();
@@ -83,7 +82,6 @@ public class GameScreenFragment extends Fragment implements GameGridView.SetAtta
         // Required empty public constructor
     }
 
-    //TODO:Do i need this method??
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
@@ -164,7 +162,7 @@ public class GameScreenFragment extends Fragment implements GameGridView.SetAtta
         attackLayout.setOrientation(LinearLayout.HORIZONTAL);
 
         //Attack button
-        Button attackButton = new Button(getActivity());
+        final Button attackButton = new Button(getActivity());
         attackButton.setPadding(padding, padding, padding, padding);
         attackButton.setWidth((int) (76 * dp));
         attackButton.setHeight((int) (36 * dp));
@@ -177,21 +175,27 @@ public class GameScreenFragment extends Fragment implements GameGridView.SetAtta
             @Override
             public void onClick(View v)
             {
-                if(_xCoord != null && _yCoord != null){
+                if(attackButton.getText() == "Attack" && _xCoord != null && _yCoord != null) {
                     //making sure we had a valid game index
-                    if(_currentGameIndex >= 0) {
+                    if (_currentGameIndex >= 0) {
                         //Adding the turn to the selected game
                         _gameModel.updateGame(_xCoord, _yCoord, _currentGameIndex);
 
-                        _opponentsGameGrid.loadGameGrid(_gameModel.getGame(_currentGameIndex).getPlayerTwo(), true);
-                        _playersGameGrid.loadGameGrid(_gameModel.getGame(_currentGameIndex).getPlayerOne(), true);
+                        _opponentsGameGrid.loadGameGrid(_gameModel.getGame(_currentGameIndex).getPlayerTwo(), false);
+                        _playersGameGrid.loadGameGrid(_gameModel.getGame(_currentGameIndex).getPlayerOne(), false);
+                        _opponentsGameGrid.setSetAttackCoordListener(null);
+                        _playersGameGrid.setSetAttackCoordListener(null);
                         //Changing the ShowBoats boolean and click listener
-                        switchClickListeners(_playersGameGrid, _opponentsGameGrid, _currentGameIndex);
                         _xText.setText(null);
                         _yText.setText(null);
                         _xCoord = null;
                         _yCoord = null;
                     }
+                    attackButton.setText("Next Turn");
+                    _onGameInteractionListener.onGameInteraction();
+                }else if(attackButton.getText() == "Next Turn"){
+                    attackButton.setText("Attack");
+                    switchClickListeners(_playersGameGrid, _opponentsGameGrid, _currentGameIndex);
                 }
 
             }
@@ -228,7 +232,6 @@ public class GameScreenFragment extends Fragment implements GameGridView.SetAtta
             playersGameGrid.setShowBoats(true);
             opponentsGameGrid.setShowBoats(false);
 
-            //TODO: Figure out how to fix this?
             opponentsGameGrid.setSetAttackCoordListener(this);
             playersGameGrid.setSetAttackCoordListener(null);
         }else{
@@ -255,25 +258,17 @@ public class GameScreenFragment extends Fragment implements GameGridView.SetAtta
         _gameModel.loadGame(new File(getActivity().getFilesDir(), "game.txt").getPath());
     }
 
-/*    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(int number)
-    {
-        if (_onGameInteractionListener != null) {
-            _onGameInteractionListener.onGameInteraction(number);
-        }
-    }*/
-
     //Called when the fragment has been associated with the activity (the Activity is passed in here).
     @Override
     public void onAttach(Activity activity)
     {
         super.onAttach(activity);
-/*        try {
+        try {
             _onGameInteractionListener = (OnGameInteractionListener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement OnGameInteractionListener");
-        }*/
+        }
     }
 
     //Called when the fragment is being disassociated from the activity.
@@ -307,7 +302,6 @@ public class GameScreenFragment extends Fragment implements GameGridView.SetAtta
      */
     public interface OnGameInteractionListener
     {
-        // TODO: Update argument type and name
-        public void onGameInteraction(int something);
+        public void onGameInteraction();
     }
 }

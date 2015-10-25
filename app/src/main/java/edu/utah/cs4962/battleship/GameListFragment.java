@@ -31,6 +31,7 @@ public class GameListFragment extends Fragment implements ListAdapter
 
     private OnGameSelectedListener _onGameSelectedListener = null;
 
+    ListView _rootView;
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -64,7 +65,10 @@ public class GameListFragment extends Fragment implements ListAdapter
         // Required empty public constructor
     }
 
-    //TODO: I don't think i need this...
+    public void invalidateRows(){
+        _rootView.invalidateViews();
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
@@ -76,10 +80,10 @@ public class GameListFragment extends Fragment implements ListAdapter
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
     {
-        ListView rootView = new ListView(getActivity());
-        rootView.setBackgroundColor(Color.GRAY);
-        rootView.setAdapter(this);
-        rootView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        _rootView = new ListView(getActivity());
+        _rootView.setBackgroundColor(Color.GRAY);
+        _rootView.setAdapter(this);
+        _rootView.setOnItemClickListener(new AdapterView.OnItemClickListener()
         {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id)
@@ -87,7 +91,7 @@ public class GameListFragment extends Fragment implements ListAdapter
                 _onGameSelectedListener.onGameSelected((position));
             }
         });
-        return  rootView;
+        return  _rootView;
     }
 
     @Override
@@ -143,7 +147,6 @@ public class GameListFragment extends Fragment implements ListAdapter
         return GameModel.getInstance().getGame((int)getItemId(position));
     }
 
-    //TODO: Make sure that the
     @Override
     public View getView(int position, View convertView, ViewGroup parent)
     {
