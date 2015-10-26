@@ -111,18 +111,18 @@ public class MainActivity extends AppCompatActivity implements GameListFragment.
             transaction.add(masterFrameLayout.getId(), gameListFragment, GAME_LIST_FRAGMENT_TAG);
         }
 
+        if(isTablet(getApplicationContext())) {
+            //Need to make parts of transaction conditional to avoid making extra lost fragments in memory..
+            GameScreenFragment gameScreenFragment = (GameScreenFragment) getFragmentManager().findFragmentByTag(GAME_SCREEN_FRAGMENT_TAG);
+            //Null check
+            if (gameScreenFragment == null) {
+                Log.i("Fragment", "created art fragment.");
 
-        //Need to make parts of transaction conditional to avoid making extra lost fragments in memory..
-        GameScreenFragment gameScreenFragment = (GameScreenFragment)getFragmentManager().findFragmentByTag(GAME_SCREEN_FRAGMENT_TAG);
-        //Null check
-        if(gameScreenFragment == null){
-            Log.i("Fragment", "created art fragment.");
-
-            gameScreenFragment = GameScreenFragment.newInstance(0);
-            //Only add if we didn't find one
-            transaction.add(detailFrameLayout.getId(), gameScreenFragment, GAME_SCREEN_FRAGMENT_TAG);
+                gameScreenFragment = GameScreenFragment.newInstance(0);
+                //Only add if we didn't find one
+                transaction.add(detailFrameLayout.getId(), gameScreenFragment, GAME_SCREEN_FRAGMENT_TAG);
+            }
         }
-
         //This actually causes the transactions to occur
         transaction.commit();
     }
@@ -144,7 +144,8 @@ public class MainActivity extends AppCompatActivity implements GameListFragment.
             _gameActivity.setVisible(true);
 
             Intent openGameActivityIntent = new Intent();
-            openGameActivityIntent.setClass(MainActivity.this, Activity.class);
+            openGameActivityIntent.setClass(MainActivity.this, SubActivity.class);
+            openGameActivityIntent.putExtra(SubActivity.GAME_INDEX_EXTRA, (int) gameId);
             MainActivity.this.startActivity(openGameActivityIntent);
         }
     }
