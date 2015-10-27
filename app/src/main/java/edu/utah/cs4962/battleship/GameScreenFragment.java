@@ -125,7 +125,7 @@ public class GameScreenFragment extends Fragment implements GameGridView.SetAtta
         }
 
         //Getting the current game to load into GameGridViews
-        Game currentGame = _gameModel.getGame(_currentGameIndex);
+        Game currentGame = _gameModel.getInstance().getGame(_currentGameIndex);
 
         //Adding this players GameGridView to layout
         _playersGameGrid = new GameGridView(getActivity());
@@ -175,29 +175,38 @@ public class GameScreenFragment extends Fragment implements GameGridView.SetAtta
             @Override
             public void onClick(View v)
             {
-                if(attackButton.getText() == "Attack" && _xCoord != null && _yCoord != null) {
-                    //making sure we had a valid game index
-                    if (_currentGameIndex >= 0) {
-                        //Adding the turn to the selected game
-                        _gameModel.updateGame(_xCoord, _yCoord, _currentGameIndex);
-
-                        _opponentsGameGrid.loadGameGrid(_gameModel.getGame(_currentGameIndex).getPlayerTwo(), false);
-                        _playersGameGrid.loadGameGrid(_gameModel.getGame(_currentGameIndex).getPlayerOne(), false);
+                if(_currentGameIndex >= 0) {
+                    if(_gameModel.getGame(_currentGameIndex).gameOver()){
                         _opponentsGameGrid.setSetAttackCoordListener(null);
                         _playersGameGrid.setSetAttackCoordListener(null);
-                        //Changing the ShowBoats boolean and click listener
-                        _xText.setText(null);
-                        _yText.setText(null);
-                        _xCoord = null;
-                        _yCoord = null;
-                    }
-                    attackButton.setText("Next Turn");
-                    _onGameInteractionListener.onGameInteraction();
-                }else if(attackButton.getText() == "Next Turn"){
-                    attackButton.setText("Attack");
-                    switchClickListeners(_playersGameGrid, _opponentsGameGrid, _currentGameIndex);
-                }
+                        attackButton.setText("Game Over");
+                    }else {
+                        if (attackButton.getText() == "Attack" && _xCoord != null && _yCoord != null) {
 
+                            //making sure we had a valid game index
+                            if (_currentGameIndex >= 0) {
+                                //Adding the turn to the selected game
+                                _gameModel.updateGame(_xCoord, _yCoord, _currentGameIndex);
+
+                                _opponentsGameGrid.loadGameGrid(_gameModel.getGame(_currentGameIndex).getPlayerTwo(), false);
+                                _playersGameGrid.loadGameGrid(_gameModel.getGame(_currentGameIndex).getPlayerOne(), false);
+                                _opponentsGameGrid.setSetAttackCoordListener(null);
+                                _playersGameGrid.setSetAttackCoordListener(null);
+                                //Changing the ShowBoats boolean and click listener
+                                _xText.setText(null);
+                                _yText.setText(null);
+                                _xCoord = null;
+                                _yCoord = null;
+                            }
+                            attackButton.setText("Next Turn");
+                            _onGameInteractionListener.onGameInteraction();
+                        }
+                        else if (attackButton.getText() == "Next Turn") {
+                            attackButton.setText("Attack");
+                            switchClickListeners(_playersGameGrid, _opponentsGameGrid, _currentGameIndex);
+                        }
+                    }
+                }
             }
         });
 

@@ -16,6 +16,8 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
+import java.io.File;
+
 //public class MainActivity extends AppCompatActivity implements GameListFragment.OnGameSelectedListener, GameScreenFragment.OnGameInteractionListener
 public class MainActivity extends AppCompatActivity implements GameListFragment.OnGameSelectedListener, GameScreenFragment.OnGameInteractionListener
 {
@@ -25,6 +27,8 @@ public class MainActivity extends AppCompatActivity implements GameListFragment.
     GameModel _gameModel = GameModel.getInstance();
 
     Activity _gameActivity;
+
+    Integer _gameId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -47,7 +51,11 @@ public class MainActivity extends AppCompatActivity implements GameListFragment.
         newGame.setText("+");
         newGame.setHeight((int) (64 * getResources().getDisplayMetrics().density));
 
-        delGame.setText("-");
+        if(isTablet(getApplicationContext())) {
+            delGame.setText("-");
+        }else{
+            delGame.setText("Delete Previous Game");
+        }
         delGame.setHeight((int) (64 * getResources().getDisplayMetrics().density));
 
         LinearLayout buttonLayout = new LinearLayout(this);
@@ -61,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements GameListFragment.
             @Override
             public void onClick(View v)
             {
-                int newGameIndex = _gameModel.getInstance().createGame();
+                int newGameIndex = _gameModel.createGame();
                 onGameSelected(newGameIndex);
                 onGameInteraction();
 
@@ -74,11 +82,19 @@ public class MainActivity extends AppCompatActivity implements GameListFragment.
             public void onClick(View v)
             {
                 GameScreenFragment gameScreenFragment = (GameScreenFragment)getFragmentManager().findFragmentByTag(GAME_SCREEN_FRAGMENT_TAG);
-                int currentGameIndex = gameScreenFragment.getCurrentGameIndex();
-                _gameModel.getInstance().deleteGame(currentGameIndex);
-                if(_gameModel.getGameCount() < 1)
-                    _gameModel.getInstance().createGame();
-                gameScreenFragment.setCurrentGameIndex(0);
+                if(gameScreenFragment != null && isTablet(getApplicationContext())) {
+                    int currentGameIndex = gameScreenFragment.getCurrentGameIndex();
+                    _gameModel.getInstance().deleteGame(currentGameIndex);
+                    if (_gameModel.getGameCount() < 1)
+                        _gameModel.getInstance().createGame();
+                    gameScreenFragment.setCurrentGameIndex(0);
+
+                }else{
+                    int index = getIntent().getIntExtra(SubActivity.GAME_INDEX_EXTRA, -1);
+                    if(_gameId != null && _gameId >= 0) {
+                        _gameModel.getInstance().deleteGame(_gameId);
+                    }
+                }
                 onGameInteraction();
             }
         });
@@ -93,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements GameListFragment.
             rootLayout.addView(masterLayout, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1));
             rootLayout.addView(detailFrameLayout, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 2));
         }else{
-
+            rootLayout.addView(masterLayout, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1));
         }
 
         //Never instantiate FragmentTransaction, always get via beginTransaction()
@@ -127,6 +143,19 @@ public class MainActivity extends AppCompatActivity implements GameListFragment.
         transaction.commit();
     }
 
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+        GameModel.getInstance().saveGame(new File(getFilesDir(), "game.txt").getPath());
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        GameModel.getInstance().loadGame(new File(getFilesDir(), "game.txt").getPath());
+    }
 
     /*This method returns the gameindex which was selected.
 
@@ -136,13 +165,13 @@ public class MainActivity extends AppCompatActivity implements GameListFragment.
     @Override
     public void onGameSelected(int gameId)
     {
-        GameScreenFragment gameScreenFragment = (GameScreenFragment)getFragmentManager().findFragmentByTag(GAME_SCREEN_FRAGMENT_TAG);
-        gameScreenFragment.setCurrentGameIndex(gameId);
-
-        //TODO: Make sure this works
-        if(!isTablet(getApplicationContext())){
-            _gameActivity.setVisible(true);
-
+        if(isTablet(getApplicationContext())){
+            GameScreenFragment gameScreenFragment = (GameScreenFragment)getFragmentManager().findFragmentByTag(GAME_SCREEN_FRAGMENT_TAG);
+            if(gameScreenFragment != null) {
+                gameScreenFragment.setCurrentGameIndex(gameId);
+            }
+        }else{
+            _gameId = gameId;
             Intent openGameActivityIntent = new Intent();
             openGameActivityIntent.setClass(MainActivity.this, SubActivity.class);
             openGameActivityIntent.putExtra(SubActivity.GAME_INDEX_EXTRA, (int) gameId);
@@ -155,7 +184,9 @@ public class MainActivity extends AppCompatActivity implements GameListFragment.
     public void onGameInteraction()
     {
         GameListFragment gameListFragment = (GameListFragment)getFragmentManager().findFragmentByTag(GAME_LIST_FRAGMENT_TAG);
-        gameListFragment.invalidateRows();
+        if(gameListFragment != null) {
+            gameListFragment.invalidateRows();
+        }
     }
 
     //Method to detect if the device is a tablet or phone

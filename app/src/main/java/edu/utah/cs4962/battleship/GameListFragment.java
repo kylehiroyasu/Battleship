@@ -17,6 +17,8 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.io.File;
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -73,7 +75,6 @@ public class GameListFragment extends Fragment implements ListAdapter
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-
     }
 
     @Override
@@ -88,6 +89,10 @@ public class GameListFragment extends Fragment implements ListAdapter
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
+                for(int i = 0; i < parent.getChildCount(); i++){
+                    parent.getChildAt(i).setBackgroundColor(Color.GRAY);
+                }
+                view.setBackgroundColor(Color.LTGRAY);
                 _onGameSelectedListener.onGameSelected((position));
             }
         });
