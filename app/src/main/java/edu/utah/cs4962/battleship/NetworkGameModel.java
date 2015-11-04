@@ -38,7 +38,7 @@ public class NetworkGameModel
         public String winner;
         public Integer missilesLaunched;
     }
-    private class GameSummary{
+    public class GameSummary{
         public String id;
         public String name;
         public String status;
@@ -70,6 +70,37 @@ public class NetworkGameModel
 
     public static String GAME_INDEX_EXTRA = "game_index";
 
+    //I should store useful variables like:
+    String _currenGameId;
+    public String getCurrenGameId()
+    {
+        return _currenGameId;
+    }
+    public void setCurrenGameId(String currenGameId)
+    {
+        _currenGameId = currenGameId;
+    }
+
+    String _currentPlayerId;
+    public String getCurrentPlayerId()
+    {
+        return _currentPlayerId;
+    }
+    public void setCurrentPlayerId(String currentPlayerId)
+    {
+        _currentPlayerId = currentPlayerId;
+    }
+
+    GameSummary[] _gameSummaries;
+    public GameSummary[] getGameSummaries()
+    {
+        return _gameSummaries;
+    }
+    public void setGameSummaries(GameSummary[] gameSummaries)
+    {
+        _gameSummaries = gameSummaries;
+    }
+
     private static NetworkGameModel _gameModel = null;
 
     //Game model will contain the following data
@@ -89,7 +120,32 @@ public class NetworkGameModel
         return _gameModel;
     }
 
-    public void loadGame(String id){
+    public void loadGames(){
+        try {
+            URL url = new URL("http://battleship.pixio.com/api/games/");
+            HttpURLConnection gameListConnection = (HttpURLConnection)url.openConnection();
+            if(gameListConnection.getResponseCode() < 200 || gameListConnection.getResponseCode() >= 300)
+                throw new Exception("Error response code");
+            Scanner ResponseScanner = new Scanner(gameListConnection.getInputStream());
+
+            //Could check to make sure connection is a content type
+            gameListConnection.getHeaderField("Content-Type");
+
+            StringBuilder responseString = new StringBuilder();
+            while(ResponseScanner.hasNext()){
+                responseString.append(ResponseScanner.nextLine());
+
+            }
+            String response = responseString.toString();
+
+            Gson gson = new Gson();
+            GameSummary[] gameSummaries = gson.fromJson(response, GameSummary[].class);
+            _gameSummaries = gameSummaries;
+        }catch (MalformedURLException e){
+            Log.e("Connection", "Malformed URL");
+        }catch (Exception e){
+            Log.e("Persistence", "Failed to load game. Error: " + e.getMessage());
+        }
     }
 
     public void saveGame(String id){
@@ -301,7 +357,7 @@ public class NetworkGameModel
             GameJoinResponse response = gson.fromJson(gameJoinResponseStringBuilder.toString(), GameJoinResponse.class);
             Log.i("Response:", "Game response includes playerId: " + response.playerId);
             gameJoinConnection.disconnect();
-
+            _currentPlayerId = response.playerId;
             return  response.playerId;
         }catch (MalformedURLException e){
             Log.e("Connection", "Malformed URL");
