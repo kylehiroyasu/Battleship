@@ -32,9 +32,10 @@ If the game has already ended, no further missiles may be launched
  and the screen should somehow indicate the winner
 
  */
-public class GameScreenActivity extends AppCompatActivity implements GameGridView.SetAttackCoordListener
+public class GameScreenActivity
+        //extends AppCompatActivity implements GameGridView.SetAttackCoordListener
 {
-    static public String GAME_INDEX_EXTRA = "game_index";
+/*    static public String GAME_INDEX_EXTRA = "game_index";
     GameModel _gameModel = new GameModel();
     Game _currentGame;
     Integer _xCoord = null;
@@ -225,5 +226,5 @@ public class GameScreenActivity extends AppCompatActivity implements GameGridVie
         _xText.setText("Col: "+_xCoord);
         _yText.setText("Row: "+_yCoord);
 
-    }
+    }*/
 }

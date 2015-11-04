@@ -30,9 +30,10 @@ The item should note:
  */
 
 //TODO: Make sure this updates the view when model is modified, everytime resume happens!!!!
-public class GameListActivity extends AppCompatActivity implements ListAdapter
+public class GameListActivity
+        //extends AppCompatActivity implements ListAdapter
 {
-    GameModel _gameModel;
+/*    GameModel _gameModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -201,5 +202,5 @@ public class GameListActivity extends AppCompatActivity implements ListAdapter
     public boolean isEnabled(int position)
     {
         return true;
-    }
+    }*/
 }
