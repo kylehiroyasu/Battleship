@@ -121,6 +121,11 @@ _boats: List of points where boats are located
             generateBoatLocations();
         }
 
+        public GameGrid(List<GridPoint> misses, List<GridPoint> hits, List<GridPoint> boats){
+            _misses = misses;
+            _hits = hits;
+            _boats = boats;
+        }
         public List<GridPoint> getMisses()
         {
             return _misses;
@@ -152,8 +157,6 @@ _boats: List of points where boats are located
             return _boats.toArray();
         }
 
-
-        //TODO: Need to make sure boats don't share the same location!!!!
         private void generateBoatLocations(){
             int[] boatSizes = {5,4,3,3,2};
             List<Point> tempBoatLocations = new ArrayList<>();

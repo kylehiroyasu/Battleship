@@ -14,30 +14,18 @@ import android.widget.LinearLayout;
 
 import java.io.File;
 
-public class SubActivity extends AppCompatActivity implements GameScreenFragment.OnGameInteractionListener
+public class SubActivity extends AppCompatActivity implements NetworkGameScreenFragment.OnGameInteractionListener
 {
     public static final String GAME_LIST_FRAGMENT_TAG = "GAME_LIST_FRAGMENT_TAG";
     public static final String GAME_SCREEN_FRAGMENT_TAG = "GAME_SCREEN_FRAGMENT_TAG";
     static public String GAME_INDEX_EXTRA = "game_index";
 
-    public int getGameId()
-    {
-        return _gameId;
-    }
-
-    public void setGameId(int gameId)
-    {
-        _gameId = gameId;
-    }
-
-    int _gameId;
+    String _gameId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-
-
 
         FrameLayout detailFrameLayout = new FrameLayout(this);
         detailFrameLayout.setId(12);
@@ -46,13 +34,15 @@ public class SubActivity extends AppCompatActivity implements GameScreenFragment
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
 
         //Need to make parts of transaction conditional to avoid making extra lost fragments in memory..
-        GameScreenFragment gameScreenFragment = (GameScreenFragment)getFragmentManager().findFragmentByTag(GAME_SCREEN_FRAGMENT_TAG);
+        NetworkGameScreenFragment gameScreenFragment = (NetworkGameScreenFragment)getFragmentManager().findFragmentByTag(GAME_SCREEN_FRAGMENT_TAG);
+
+        _gameId = getIntent().getStringExtra(GAME_INDEX_EXTRA);
+
+
         //Null check
         if(gameScreenFragment == null){
             Log.i("Fragment", "created art fragment.");
-
-            _gameId = getIntent().getIntExtra(GAME_INDEX_EXTRA, 0);
-            gameScreenFragment = GameScreenFragment.newInstance(_gameId);
+            gameScreenFragment = NetworkGameScreenFragment.newInstance(0);
             //Only add if we didn't find one
             transaction.add(detailFrameLayout.getId(), gameScreenFragment, GAME_SCREEN_FRAGMENT_TAG);
         }
@@ -67,26 +57,11 @@ public class SubActivity extends AppCompatActivity implements GameScreenFragment
         setContentView(rootLayout);
 
     }
-
-    @Override
-    protected void onPause()
-    {
-        super.onPause();
-        GameModel.getInstance().saveGame(new File(getFilesDir(), "game.txt").getPath());
-    }
-
-    @Override
-    protected void onResume()
-    {
-        super.onResume();
-        GameModel.getInstance().loadGame(new File(getFilesDir(), "game.txt").getPath());
-    }
-
     //this method should allow the gameListActivity to update as needed to reflect changes going on in game
     //@Override
     public void onGameInteraction()
     {
-        GameListFragment gameListFragment = (GameListFragment)getFragmentManager().findFragmentByTag(GAME_LIST_FRAGMENT_TAG);
+        NetworkGameListFragment gameListFragment = (NetworkGameListFragment)getFragmentManager().findFragmentByTag(GAME_LIST_FRAGMENT_TAG);
         if(gameListFragment != null) {
             gameListFragment.invalidateRows();
         }

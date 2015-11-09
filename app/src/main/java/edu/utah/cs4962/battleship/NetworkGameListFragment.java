@@ -24,12 +24,14 @@ public class NetworkGameListFragment extends Fragment implements ListAdapter
 {
     ListView _rootView;
 
-    //TODO: This listener/interface will control what screen to load when a game is selected
+    NetworkGameModel.GameSummary[] summaries;
+
+    //This listener/interface will control what screen to load when a game is selected
     private OnGameSelectedListener _onGameSelectedListener = null;
 
     public interface OnGameSelectedListener
     {
-        public void onGameSelected(int gameId);
+        public void onGameSelected(String gameId);
     }
 
     public static NetworkGameListFragment newInstance(){
@@ -64,7 +66,9 @@ public class NetworkGameListFragment extends Fragment implements ListAdapter
                     parent.getChildAt(i).setBackgroundColor(Color.GRAY);
                 }
                 view.setBackgroundColor(Color.LTGRAY);
-                _onGameSelectedListener.onGameSelected((position));
+
+                //TODO: This should be right...
+                _onGameSelectedListener.onGameSelected(summaries[position].id);
             }
         });
         return  _rootView;
@@ -150,7 +154,7 @@ public class NetworkGameListFragment extends Fragment implements ListAdapter
         //Executing asyncTask and capturing results
         try{
             sync.execute(null, null,null);
-            NetworkGameModel.GameSummary[] summaries = sync.get();
+            summaries = sync.get();
 
             LinearLayout rowLayout = new LinearLayout(getActivity());
             rowLayout.setOrientation(LinearLayout.VERTICAL);
@@ -165,12 +169,20 @@ public class NetworkGameListFragment extends Fragment implements ListAdapter
             gameProgress.setPadding(padding, padding, padding, padding);
             gameProgress.setText("Game State: " + summaries[position].status);
 
+            //if in progress
+            TextView gameId = new TextView(getActivity());
+            gameId.setPadding(padding, padding, padding, padding);
+            gameId.setText(summaries[position].id);
+            gameId.setVisibility(View.GONE);
+
             rowLayout.addView(drawingTitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT, 0));
             rowLayout.addView(gameProgress, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT, 0));
+            rowLayout.addView(gameId, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT, 0));
+
 
             return rowLayout;
         }catch (Exception e){
-            Log.e("Exception Loading Summaries", "Exception: "+e+" Message:"+e.getMessage());
+            Log.e("Exc. Loading Summaries", "Exception: "+e+" Message:"+e.getMessage());
         }
         TextView text = new TextView(getActivity());
         text.setText("ERROR");
