@@ -1,6 +1,7 @@
 package edu.utah.cs4962.battleship;
 
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -22,15 +23,24 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by kylehiroyasu on 11/1/2015.
+ * This network adapter implement new listener for data changed, pinging server every 200MS
+    The interface will include some sort of enumerable indicating whther or not it was the currentGame
+    or if it has to do with the listview
  */
 public class NetworkGameModel
 {
-    private class GameDetail{
+    public static String GameUpdate = "GAMEUPDATE";
+    public static String ListUpdate = "LISTUPDATE";
+
+    public class GameDetail{
         public String id;
         public String name;
         public String player1;
@@ -66,6 +76,34 @@ public class NetworkGameModel
     private class GameBoard{
         public GameCoord[] playerBoard;
         public  GameCoord[] opponentBoard;
+    }
+    private class MyGame{
+        public String _gameId;
+        public String _playerId;
+
+        public MyGame(String gameId, String playerId){
+            _gameId = gameId;
+            _playerId = playerId;
+        }
+    }
+
+    public Game getCurrentGame()
+    {
+        return _currentGame;
+    }
+
+    //Copy of the current game being played
+    Game _currentGame;
+
+    //Need to keep track of
+    List<MyGame> _myGameList;
+
+    public boolean isMyGame(String gameId){
+        for(int i = 0; i < _myGameList.size(); i++){
+            if(_myGameList.get(i)._gameId == gameId)
+                return true;
+        }
+        return false;
     }
 
     public static String GAME_INDEX_EXTRA = "game_index";
@@ -103,14 +141,8 @@ public class NetworkGameModel
 
     private static NetworkGameModel _gameModel = null;
 
-    //Game model will contain the following data
-    //-List of games
-    private List<Game> _games;
-
     //This empty method works to prevent multiple instances of GameModel
     protected NetworkGameModel(){
-        _games = new ArrayList<>();
-        _games.add(new Game());
     }
 
     public static NetworkGameModel getInstance(){
@@ -120,7 +152,8 @@ public class NetworkGameModel
         return _gameModel;
     }
 
-    public void loadGames(){
+    public void getGames(){
+        //Loading Network Game Summaries
         try {
             URL url = new URL("http://battleship.pixio.com/api/games/");
             HttpURLConnection gameListConnection = (HttpURLConnection)url.openConnection();
@@ -147,9 +180,65 @@ public class NetworkGameModel
             Log.e("Persistence", "Failed to load game. Error: " + e.getMessage());
         }
     }
+    public void loadGame(String path){
+        //Loading Network Game Summaries
+        try {
+            URL url = new URL("http://battleship.pixio.com/api/games/");
+            HttpURLConnection gameListConnection = (HttpURLConnection)url.openConnection();
+            if(gameListConnection.getResponseCode() < 200 || gameListConnection.getResponseCode() >= 300)
+                throw new Exception("Error response code");
+            Scanner ResponseScanner = new Scanner(gameListConnection.getInputStream());
 
-    public void saveGame(String id){
+            //Could check to make sure connection is a content type
+            gameListConnection.getHeaderField("Content-Type");
+
+            StringBuilder responseString = new StringBuilder();
+            while(ResponseScanner.hasNext()){
+                responseString.append(ResponseScanner.nextLine());
+
+            }
+            String response = responseString.toString();
+
+            Gson gson = new Gson();
+            GameSummary[] gameSummaries = gson.fromJson(response, GameSummary[].class);
+            _gameSummaries = gameSummaries;
+        }catch (MalformedURLException e){
+            Log.e("Connection", "Malformed URL");
+        }catch (Exception e){
+            Log.e("Persistence", "Failed to load game. Error: " + e.getMessage());
+        }
+
+        //Loading set of saved games I've joined
+        try{
+            File gameFile = new File(path);
+            FileReader fileReader = new FileReader(gameFile);
+            BufferedReader reader = new BufferedReader(fileReader);
+            String gamesJson = reader.readLine();
+
+            Gson gson = new Gson();
+            Type collectionType = new TypeToken<ArrayList<MyGame>>(){}.getType();
+            _myGameList = (ArrayList<MyGame>)gson.fromJson(gamesJson, collectionType);
+        }catch (Exception e){
+            Log.e("Persistence", "Failed to load game. Error: " +e.getMessage());
+        }
+
+
     }
+
+    public void saveGame(String path){
+        Gson gson = new Gson();
+        String jsonGame = gson.toJson(_myGameList);
+        try{
+            FileWriter fileWriter = new FileWriter(path, false);
+            BufferedWriter writer = new BufferedWriter(fileWriter);
+            writer.write(jsonGame);
+            writer.close();
+
+        }catch (Exception e){
+            Log.e("Persistence", "Failed to save game. Error: " +e.getMessage());
+        }
+    }
+
     //This method will check if the current game is non null, save if true, and generate a new empty game
     // and return the index of the new game
     public GameCreateResponse createGame(String gameName, String playerName){
@@ -182,6 +271,7 @@ public class NetworkGameModel
             //Saving the ids
             _currenGameId = response.gameId;
             _currentPlayerId = response.playerId;
+            _myGameList.add(new MyGame(response.gameId,response.playerId));
 
             return response;
 
@@ -193,52 +283,18 @@ public class NetworkGameModel
         return null;
     }
 
-
-    //This method will specify the game to be deleted
-    //Need to check and make sure we arent deleting current game, otherwise index invalid
-    public void deleteGame(int index){
-        if(index < _games.size()){
-            _games.remove(index);
-        }
-    }
-
     public int getGameCount(){
-        try {
-            URL url = new URL("http://battleship.pixio.com/api/games/");
-            HttpURLConnection gameListConnection = (HttpURLConnection)url.openConnection();
-            if(gameListConnection.getResponseCode() < 200 || gameListConnection.getResponseCode() >= 300)
-                throw new Exception("Error response code");
-            Scanner ResponseScanner = new Scanner(gameListConnection.getInputStream());
-
-            //Could check to make sure connection is a content type
-            gameListConnection.getHeaderField("Content-Type");
-
-            StringBuilder responseString = new StringBuilder();
-            while(ResponseScanner.hasNext()){
-                responseString.append(ResponseScanner.nextLine());
-
-            }
-            String response = responseString.toString();
-
-            Gson gson = new Gson();
-            GameSummary[] gameSummaries = gson.fromJson(response, GameSummary[].class);
-            return gameSummaries.length;
-        }catch (MalformedURLException e){
-            Log.e("Connection", "Malformed URL");
-        }catch (Exception e){
-            Log.e("Persistence", "Failed to load game. Error: " + e.getMessage());
-        }
-        return -1;
+        return _gameSummaries.length;
     }
 
-    public GameBoard getGameBoard(String gameId, String playerId){
+    public GameBoard getGameBoard(){
         try {
-            URL gameTurnUrl = new URL("http://battleship.pixio.com/api/games/"+gameId+"/board");
+            URL gameTurnUrl = new URL("http://battleship.pixio.com/api/games/"+_currenGameId+"/board");
             HttpURLConnection gameTurnConnection = (HttpURLConnection) gameTurnUrl.openConnection();
             gameTurnConnection.addRequestProperty("Content-Type", "application/json");
             gameTurnConnection.setRequestMethod("POST");
             //JSONObject payload = new JSONObject()
-            String payload = "{ \"playerId\" : \""+playerId+"\"}";
+            String payload = "{ \"playerId\" : \""+_currentPlayerId+"\"}";
 
             gameTurnConnection.setDoOutput(true);
             OutputStreamWriter payloadStream = new OutputStreamWriter(gameTurnConnection.getOutputStream());
@@ -265,17 +321,14 @@ public class NetworkGameModel
         return null;
     }
 
-    public GameGuessResponse updateGame(int x, int y, String playerId, String gameId){
+    public GameGuessResponse updateGame(int x, int y){
         try {
-            if(playerId != _currentPlayerId && gameId != _currenGameId){
-                throw new Exception("Player/Game id mismatch on update game in NetworkGameModel");
-            }
-            URL gameGuessUrl = new URL("http://battleship.pixio.com/api/games/"+gameId+"/guess");
+            URL gameGuessUrl = new URL("http://battleship.pixio.com/api/games/"+_currenGameId+"/guess");
             HttpURLConnection gameGuessConnection = (HttpURLConnection) gameGuessUrl.openConnection();
             gameGuessConnection.addRequestProperty("Content-Type", "application/json");
             gameGuessConnection.setRequestMethod("POST");
             //JSONObject payload = new JSONObject()
-            String payload = "{ \"playerId\" : \""+playerId+"\",\"xPos\" : \""+x+"\", \"yPos\" : \""+y+"\"}";
+            String payload = "{ \"playerId\" : \""+_currentPlayerId+"\",\"xPos\" : \""+x+"\", \"yPos\" : \""+y+"\"}";
 
             gameGuessConnection.setDoOutput(true);
             OutputStreamWriter payloadStream = new OutputStreamWriter(gameGuessConnection.getOutputStream());
@@ -306,6 +359,7 @@ public class NetworkGameModel
     }
 
     public GameDetail getGameDetail(String id){
+        _currenGameId = id;
         try {
 
             URL url = new URL("http://battleship.pixio.com/api/games/"+id);
@@ -338,6 +392,15 @@ public class NetworkGameModel
 
     public String joinGame(String gameId, String playerName){
         try {
+            //Check and make sure we haven't already joined this game before
+            boolean preexisting = false;
+            Iterator iter = _myGameList.iterator();
+            for(int i = 0; i < _myGameList.size(); i++){
+                if(gameId == _myGameList.get(i)._gameId){
+                    preexisting = true;
+                    return _myGameList.get(i)._playerId;
+                }
+            }
             URL gameJoinUrl = new URL("http://battleship.pixio.com/api/games/"+gameId+"/join");
             HttpURLConnection gameJoinConnection = (HttpURLConnection) gameJoinUrl.openConnection();
             gameJoinConnection.addRequestProperty("Content-Type", "application/json");
@@ -365,7 +428,8 @@ public class NetworkGameModel
             //Updating variables
             _currenGameId = gameId;
             _currentPlayerId = response.playerId;
-            return  response.playerId;
+
+            return  _currentPlayerId;
         }catch (MalformedURLException e){
             Log.e("Connection", "Malformed URL");
         }catch (Exception e){
@@ -375,14 +439,14 @@ public class NetworkGameModel
 
     }
 
-    public GameTurnResponse whoseTurn(String gameId, String playerId){
+    public GameTurnResponse whoseTurn(){
         try {
-            URL gameTurnUrl = new URL("http://battleship.pixio.com/api/games/"+gameId+"/status");
+            URL gameTurnUrl = new URL("http://battleship.pixio.com/api/games/"+_currenGameId+"/status");
             HttpURLConnection gameTurnConnection = (HttpURLConnection) gameTurnUrl.openConnection();
             gameTurnConnection.addRequestProperty("Content-Type", "application/json");
             gameTurnConnection.setRequestMethod("POST");
             //JSONObject payload = new JSONObject()
-            String payload = "{ \"playerId\" : \""+playerId+"\"}";
+            String payload = "{ \"playerId\" : \""+_currentPlayerId+"\"}";
 
             gameTurnConnection.setDoOutput(true);
             OutputStreamWriter payloadStream = new OutputStreamWriter(gameTurnConnection.getOutputStream());
@@ -410,12 +474,9 @@ public class NetworkGameModel
         return null;
     }
 
-    public Game getGame(String gameId, String playerId){
-        //TODO: Assuming i just want to save the gameId if i'm accessing this game. correct assumption?
-        _currenGameId = gameId;
-        _currentPlayerId = playerId;
+    public Game getGame(){
 
-        GameBoard boards = getGameBoard(gameId, playerId);
+        GameBoard boards = getGameBoard();
 
         List<Game.GridPoint> playerHits = new ArrayList<>();
         List<Game.GridPoint> playerMisses = new ArrayList<>();
@@ -462,6 +523,10 @@ public class NetworkGameModel
 
         Game game = new Game();
         game.loadGame(playerGrid, oppGrid, gameOver);
+
+        //Storing most recent game
+        _currentGame = game;
+
         //returning game
         return game;
     }

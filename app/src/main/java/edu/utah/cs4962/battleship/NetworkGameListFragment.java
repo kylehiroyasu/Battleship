@@ -31,7 +31,7 @@ public class NetworkGameListFragment extends Fragment implements ListAdapter
 
     public interface OnGameSelectedListener
     {
-        public void onGameSelected(String gameId);
+        public void onGameSelected(String gameId, String gameStatus);
     }
 
     public static NetworkGameListFragment newInstance(){
@@ -40,9 +40,7 @@ public class NetworkGameListFragment extends Fragment implements ListAdapter
         return fragment;
     }
 
-    public NetworkGameListFragment(){
-
-}
+    public NetworkGameListFragment(){}
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -54,6 +52,23 @@ public class NetworkGameListFragment extends Fragment implements ListAdapter
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
+        AsyncTask<Void, Void, NetworkGameModel.GameSummary[]> sync = new AsyncTask<Void, Void, NetworkGameModel.GameSummary[]>()
+        {
+            @Override
+            protected NetworkGameModel.GameSummary[] doInBackground(Void... params)
+            {
+                NetworkGameModel.getInstance().getGames();
+                return NetworkGameModel.getInstance().getGameSummaries();
+            }
+        };
+        try{
+            sync.execute();
+            summaries = sync.get();
+        }catch(Exception e){
+            Log.e("GameList", "Failed to load summaries of games: "+e+" "+e.getMessage());
+        }
+
+
         _rootView = new ListView(getActivity());
         _rootView.setBackgroundColor(Color.GRAY);
         _rootView.setAdapter(this);
@@ -68,7 +83,7 @@ public class NetworkGameListFragment extends Fragment implements ListAdapter
                 view.setBackgroundColor(Color.LTGRAY);
 
                 //TODO: This should be right...
-                _onGameSelectedListener.onGameSelected(summaries[position].id);
+                _onGameSelectedListener.onGameSelected(summaries[position].id, summaries[position].status);
             }
         });
         return  _rootView;
@@ -102,22 +117,7 @@ public class NetworkGameListFragment extends Fragment implements ListAdapter
     @Override
     public int getCount()
     {
-        AsyncTask<Integer, Integer, Integer> sync = new AsyncTask<Integer, Integer, Integer>()
-        {
-            @Override
-            protected Integer doInBackground(Integer... params)
-            {
-                return NetworkGameModel.getInstance().getGameCount();
-            }
-        };
-
-        try{
-            sync.execute(null,null,null);
-            return sync.get();
-        }catch (Exception e){
-            Log.e("Exception getting Count", "Exception: " + e + " Message:" + e.getMessage());
-        }
-        return -1;
+        return summaries.length;
     }
 
     @Override
@@ -141,52 +141,31 @@ public class NetworkGameListFragment extends Fragment implements ListAdapter
     @Override
     public View getView(int position, View convertView, ViewGroup parent)
     {
-        //Creating async Task
-        AsyncTask<Integer,Integer, NetworkGameModel.GameSummary[]> sync = new AsyncTask<Integer, Integer, NetworkGameModel.GameSummary[]>()
-        {
-            @Override
-            protected NetworkGameModel.GameSummary[] doInBackground(Integer... params)
-            {
-                NetworkGameModel.getInstance().loadGames();
-                return NetworkGameModel.getInstance().getGameSummaries();
-            }
-        };
+        LinearLayout rowLayout = new LinearLayout(getActivity());
+        rowLayout.setOrientation(LinearLayout.VERTICAL);
+        //Game number
+        TextView drawingTitle = new TextView(getActivity());
+        int padding = (int)(5* getResources().getDisplayMetrics().density);
+        drawingTitle.setPadding(padding,padding,padding,padding);
+        drawingTitle.setText("Name: " + summaries[position].name);
+
+        //if in progress
+        TextView gameProgress = new TextView(getActivity());
+        gameProgress.setPadding(padding, padding, padding, padding);
+        gameProgress.setText("Game State: " + summaries[position].status);
+
+        //if in progress
+        TextView gameId = new TextView(getActivity());
+        gameId.setPadding(padding, padding, padding, padding);
+        gameId.setText(summaries[position].id);
+        gameId.setVisibility(View.GONE);
+
+        rowLayout.addView(drawingTitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT, 0));
+        rowLayout.addView(gameProgress, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT, 0));
+        rowLayout.addView(gameId, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT, 0));
         //Executing asyncTask and capturing results
-        try{
-            sync.execute(null, null,null);
-            summaries = sync.get();
+        return rowLayout;
 
-            LinearLayout rowLayout = new LinearLayout(getActivity());
-            rowLayout.setOrientation(LinearLayout.VERTICAL);
-            //Game number
-            TextView drawingTitle = new TextView(getActivity());
-            int padding = (int)(5* getResources().getDisplayMetrics().density);
-            drawingTitle.setPadding(padding,padding,padding,padding);
-            drawingTitle.setText("Name: " + summaries[position].name);
-
-            //if in progress
-            TextView gameProgress = new TextView(getActivity());
-            gameProgress.setPadding(padding, padding, padding, padding);
-            gameProgress.setText("Game State: " + summaries[position].status);
-
-            //if in progress
-            TextView gameId = new TextView(getActivity());
-            gameId.setPadding(padding, padding, padding, padding);
-            gameId.setText(summaries[position].id);
-            gameId.setVisibility(View.GONE);
-
-            rowLayout.addView(drawingTitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT, 0));
-            rowLayout.addView(gameProgress, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT, 0));
-            rowLayout.addView(gameId, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT, 0));
-
-
-            return rowLayout;
-        }catch (Exception e){
-            Log.e("Exc. Loading Summaries", "Exception: "+e+" Message:"+e.getMessage());
-        }
-        TextView text = new TextView(getActivity());
-        text.setText("ERROR");
-        return text;
     }
 
     @Override

@@ -34,15 +34,10 @@ public class NetworkGameScreenFragment extends Fragment implements GameGridView.
     GameGridView _opponentsGameGrid;
 
     private OnGameInteractionListener _onGameInteractionListener;
-    
-    String _currentGameId;
-    String _playerId;
-    String _opponentId;
 
-    public String getCurrentGameId()
-    {
-        return _currentGameId;
-    }
+    //TODO: I dont think I should have this in the class...
+    String _currentGameId;
+
 
     public void setCurrentGameId(String currentGameId)
     {
@@ -53,7 +48,7 @@ public class NetworkGameScreenFragment extends Fragment implements GameGridView.
 
             protected Game doInBackground(Void... params)
             {
-                return NetworkGameModel.getInstance().getGame(_currentGameId, _playerId);
+                return NetworkGameModel.getInstance().getGame();
             }
         };
         Game game;
@@ -147,12 +142,12 @@ public class NetworkGameScreenFragment extends Fragment implements GameGridView.
             @Override
             protected Game doInBackground(Void... params)
             {
-                //String gameId = NetworkGameModel.getInstance().getCurrenGameId();
+                String gameId = NetworkGameModel.getInstance().getCurrenGameId();
                 String playerId = NetworkGameModel.getInstance().getCurrentPlayerId();
 
-                Log.i("GameSelection","Game selected: Current id-"+_currentGameId+" playerId:"+playerId);
+                Log.i("GameSelection","Game selected: Current id-"+gameId+" playerId:"+playerId);
                 //TODO: CurrentGameId is null too!
-                return NetworkGameModel.getInstance().getGame(_currentGameId, playerId);
+                return NetworkGameModel.getInstance().getGame();
             }
         };
         try{
@@ -231,8 +226,8 @@ public class NetworkGameScreenFragment extends Fragment implements GameGridView.
                                     @Override
                                     protected Game doInBackground(String... params)
                                     {
-                                        NetworkGameModel.getInstance().updateGame(_xCoord, _yCoord, _playerId, _currentGameId);
-                                        return NetworkGameModel.getInstance().getGame(_currentGameId, _playerId);
+                                        NetworkGameModel.getInstance().updateGame(_xCoord, _yCoord);
+                                        return NetworkGameModel.getInstance().getGame();
                                     }
                                 };
                                 Game updatedGame = null;

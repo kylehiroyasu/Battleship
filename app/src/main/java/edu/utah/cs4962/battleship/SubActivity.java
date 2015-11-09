@@ -20,7 +20,6 @@ public class SubActivity extends AppCompatActivity implements NetworkGameScreenF
     public static final String GAME_SCREEN_FRAGMENT_TAG = "GAME_SCREEN_FRAGMENT_TAG";
     static public String GAME_INDEX_EXTRA = "game_index";
 
-    String _gameId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -35,9 +34,6 @@ public class SubActivity extends AppCompatActivity implements NetworkGameScreenF
 
         //Need to make parts of transaction conditional to avoid making extra lost fragments in memory..
         NetworkGameScreenFragment gameScreenFragment = (NetworkGameScreenFragment)getFragmentManager().findFragmentByTag(GAME_SCREEN_FRAGMENT_TAG);
-
-        _gameId = getIntent().getStringExtra(GAME_INDEX_EXTRA);
-
 
         //Null check
         if(gameScreenFragment == null){
@@ -65,5 +61,19 @@ public class SubActivity extends AppCompatActivity implements NetworkGameScreenF
         if(gameListFragment != null) {
             gameListFragment.invalidateRows();
         }
+    }
+
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+        NetworkGameModel.getInstance().saveGame(new File(getFilesDir(), "game.txt").getPath());
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        NetworkGameModel.getInstance().loadGame(new File(getFilesDir(), "game.txt").getPath());
     }
 }

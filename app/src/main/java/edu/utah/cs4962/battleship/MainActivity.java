@@ -14,11 +14,54 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+
+import java.io.File;
+import java.util.Timer;
+import java.util.TimerTask;
+
 //TODO: Use android timer or alarmmanager to check for updates
 //TODO: I need to save games I have created with gameId and playerId
 //public class MainActivity extends AppCompatActivity implements GameListFragment.OnGameSelectedListener, GameScreenFragment.OnGameInteractionListener
 public class MainActivity extends AppCompatActivity implements NetworkGameListFragment.OnGameSelectedListener, NetworkGameScreenFragment.OnGameInteractionListener
 {
+    //Stuff to keep things up to date!!!
+    //Associated timer for interface to trigger listener
+    Timer updateTimer;
+    public void checkForUpdates(){
+        if(NetworkGameModel.getInstance().getCurrentPlayerId() != null && NetworkGameModel.getInstance().getCurrenGameId() != null){
+            final int gameCount = NetworkGameModel.getInstance().getGameSummaries().length;
+            final int missiles = NetworkGameModel.getInstance().getCurrentGame().getPlayerOne().hasBeenAttacked() + NetworkGameModel.getInstance().getCurrentGame().getPlayerTwo().hasBeenAttacked();
+            AsyncTask<Void, Void, Integer> sync = new AsyncTask<Void, Void, Integer>()
+            {
+                @Override
+                protected Integer doInBackground(Void... params)
+                {
+                    //Updating from server
+                    Game updatedGame = NetworkGameModel.getInstance().getGame();
+                    NetworkGameModel.getInstance().getGames();
+                    return updatedGame.getPlayerOne().hasBeenAttacked() + updatedGame.getPlayerTwo().hasBeenAttacked();
+                }
+
+                @Override
+                protected void onPostExecute(Integer integer)
+                {
+                    if(missiles < integer){
+                        //Invalidate
+                    }
+                    if(gameCount < NetworkGameModel.getInstance().getGameSummaries().length){
+                        //Invalidate
+                    }
+                }
+            };
+            try{
+                sync.execute();
+            }catch(Exception e){
+
+            }
+        }
+
+    }
+
     public static final String GAME_LIST_FRAGMENT_TAG = "GAME_LIST_FRAGMENT_TAG";
     public static final String GAME_SCREEN_FRAGMENT_TAG = "GAME_SCREEN_FRAGMENT_TAG";
 
@@ -31,6 +74,18 @@ public class MainActivity extends AppCompatActivity implements NetworkGameListFr
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
+        //Creating timer to update View!!!
+        TimerTask task = new TimerTask()
+        {
+            @Override
+            public void run()
+            {
+                checkForUpdates();
+            }
+        };
+        updateTimer = new Timer();
+        updateTimer.schedule(task, (long)1000);
+
 
         super.onCreate(savedInstanceState);
         LinearLayout rootLayout = new LinearLayout(this);
@@ -85,7 +140,8 @@ public class MainActivity extends AppCompatActivity implements NetworkGameListFr
                     String[] result = sync.get();
                     _gameId = result[1];
                     String playerId = result[0];
-                    onGameSelected(_gameId);
+                    //TODO: I assume this is going to be acceptable? :o
+                    onGameSelected(_gameId, "WAITING");
                     onGameInteraction();
 
                 }catch(Exception e){
@@ -144,37 +200,68 @@ public class MainActivity extends AppCompatActivity implements NetworkGameListFr
     protected void onPause()
     {
         super.onPause();
-        //GameModel.getInstance().saveGame(new File(getFilesDir(), "game.txt").getPath());
+        NetworkGameModel.getInstance().saveGame(new File(getFilesDir(), "game.txt").getPath());
     }
 
     @Override
     protected void onResume()
     {
         super.onResume();
-        //GameModel.getInstance().loadGame(new File(getFilesDir(), "game.txt").getPath());
+        NetworkGameModel.getInstance().loadGame(new File(getFilesDir(), "game.txt").getPath());
     }
 
     /*This method returns the gameindex which was selected.
 
     From here it should find the choose the correct game model and throw it into the GameScreenFragment
      */
-
     @Override
-    public void onGameSelected(String gameId)
+    public void onGameSelected(final String gameId, String gameStatus)
     {
-        if(isTablet(getApplicationContext())){
-            NetworkGameScreenFragment gameScreenFragment = (NetworkGameScreenFragment)getFragmentManager().findFragmentByTag(GAME_SCREEN_FRAGMENT_TAG);
-            if(gameScreenFragment != null) {
-                gameScreenFragment.setCurrentGameId(gameId);
-            }
-        }else{
-            _gameId = gameId;
-            NetworkGameModel.getInstance().setCurrenGameId(_gameId);
-            Intent openGameActivityIntent = new Intent();
-            openGameActivityIntent.setClass(MainActivity.this, SubActivity.class);
-            openGameActivityIntent.putExtra(SubActivity.GAME_INDEX_EXTRA, gameId);
-            MainActivity.this.startActivity(openGameActivityIntent);
+        if (gameStatus == "WAITING" || NetworkGameModel.getInstance().isMyGame(gameId)) {
+            AsyncTask<Void, Void, Void> sync = new AsyncTask<Void, Void, Void>()
+            {
+                @Override
+                protected Void doInBackground(Void... params)
+                {
+                    //TODO: Getting player name from input
+                    NetworkGameModel.getInstance().joinGame(gameId, "BOB");
+                    return null;
+                }
+
+                @Override
+                protected void onPostExecute(Void aVoid)
+                {
+                    if (isTablet(getApplicationContext())) {
+                        NetworkGameScreenFragment gameScreenFragment = (NetworkGameScreenFragment) getFragmentManager().findFragmentByTag(GAME_SCREEN_FRAGMENT_TAG);
+                        if (gameScreenFragment != null) {
+                            gameScreenFragment.setCurrentGameId(gameId);
+                        }
+                    }
+                    else {
+                        Intent openGameActivityIntent = new Intent();
+                        openGameActivityIntent.setClass(MainActivity.this, SubActivity.class);
+                        MainActivity.this.startActivity(openGameActivityIntent);
+                    }
+                }
+            };
+            sync.execute();
+
         }
+        else {
+            //TODO: SHOWSTATS
+/*            if (isTablet(getApplicationContext())) {
+                NetworkGameStatsFragment gameStatsFragment = (NetworkGameStatsFragment) getFragmentManager().findFragmentByTag(GAME_STATS_FRAGMENT_TAG);
+                if (gameStatsFragment != null) {
+                    gameStatsFragment.setCurrentGameId(gameId);
+                }
+            }
+            else {
+                Intent openGameActivityIntent = new Intent();
+                openGameActivityIntent.setClass(MainActivity.this, GameStatsActivity.class);
+                MainActivity.this.startActivity(openGameActivityIntent);
+            }*/
+        }
+
     }
 
     //this method should allow the gameListActivity to update as needed to reflect changes going on in game
